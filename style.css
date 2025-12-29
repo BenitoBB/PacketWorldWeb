@@ -1,0 +1,87 @@
+/* Definición de colores basados en el logo */
+:root {
+    --color-primary-dark: #1E3B5C; /* Azul oscuro/Verde azulado */
+    --color-secondary-accent: #F77F00; /* Naranja brillante */
+    --color-gradient-start: #2a7c87; /* Inicio degradado (verde azulado) */
+    --color-gradient-end: #F77F00; /* Fin degradado (naranja) */
+}
+
+/* Clases utilitarias personalizadas que usan las variables CSS */
+.bg-primary-dark {
+    background-color: var(--color-primary-dark);
+}
+.text-secondary-accent {
+    color: var(--color-secondary-accent);
+}
+.border-secondary-accent {
+    border-color: var(--color-secondary-accent);
+}
+.focus-ring-secondary-accent:focus {
+    --tw-ring-color: var(--color-secondary-accent);
+}
+/* Se añade el color del botón principal que antes estaba inline */
+.bg-secondary-accent {
+    background-color: var(--color-secondary-accent);
+}
+.hover\:bg-secondary-accent:hover {
+    background-color: var(--color-secondary-accent);
+}
+
+
+/* Estilos de la animación del logo (simulación de carga/movimiento) */
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.logo-animate {
+    animation: fade-in-up 1.5s ease-out;
+}
+
+/* Estilo para el contenedor principal de la aplicación */
+.app-container {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #f3f4f6; /* Gris claro de fondo */
+}
+
+/* Estilo para las tarjetas de historial y la línea de tiempo */
+.history-card {
+    /* Línea vertical de la línea de tiempo */
+    border-left: 3px solid var(--color-primary-dark);
+    position: relative;
+    padding-left: 1.5rem;
+}
+.history-card::before {
+    /* El punto de la línea de tiempo */
+    content: '';
+    position: absolute;
+    left: -10px;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: var(--color-primary-dark);
+    border: 4px solid white; /* Simula el punto en la línea de tiempo */
+}
+/* Estilo para el punto de eventos ya completados (cambia a color naranja) */
+.history-card.complete::before {
+    background-color: var(--color-secondary-accent);
+}
+/* Ajuste para el primer elemento de la línea de tiempo */
+#tracking-list > div:first-child .history-card::before {
+     top: 0.5rem; /* Ajuste para el primer punto */
+}
+/* Estilo para el evento actual */
+.bg-secondary-accent\/20 {
+    background-color: rgba(247, 127, 0, 0.2);
+}
