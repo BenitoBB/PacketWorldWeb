@@ -1,19 +1,5 @@
-// Datos de ejemplo simulados para la demostración
-const MOCK_DATA = {
-    '1A2B3C4D5E': [
-        { date: '2025-11-28', time: '14:30', location: 'Ciudad de México, MX', description: 'Paquete Recibido y Procesado', complete: true },
-        { date: '2025-11-28', time: '18:00', location: 'Centro de Distribución, MX', description: 'En Tránsito: Saliendo de CDMX', complete: true },
-        { date: '2025-11-29', time: '07:15', location: 'Monterrey, NL, MX', description: 'Llegada a Centro Operativo Monterrey', complete: true },
-        { date: '2025-11-29', time: '10:00', location: 'Monterrey, NL, MX', description: 'En Ruta de Entrega (Estimado: Hoy antes de las 18:00)', complete: false },
-        { date: '2025-11-29', time: '18:00', location: 'Destino Final', description: 'Entrega Exitosa', complete: false }
-    ],
-    '9Z8Y7X6W5V': [
-        { date: '2025-11-27', time: '09:00', location: 'Miami, FL, USA', description: 'Envío Creado y Etiqueta Impresa', complete: true },
-        { date: '2025-11-27', time: '16:45', location: 'Miami, FL, USA', description: 'Recolección de Paquete por Transportista', complete: true },
-        { date: '2025-11-28', time: '03:00', location: 'En Vuelo Internacional', description: 'Despacho de Aduanas de Salida', complete: false },
-        { date: '2025-11-30', time: '09:00', location: 'Madrid, ES', description: 'Llegada a Aduana España', complete: false },
-    ]
-};
+// Configuración de la API con el contexto correcto de tu proyecto
+const API_BASE_URL = 'http://localhost:8080/APIPacketWorld/api/envio';
 
 // Referencias a elementos del DOM
 const searchScreen = document.getElementById('search-screen');
@@ -30,114 +16,125 @@ const buttonContent = document.getElementById('button-content');
 const loadingSpinner = document.getElementById('loading-spinner');
 
 /**
- * Simula la búsqueda del número de guía.
- * Después de una simulación de espera, muestra la segunda pantalla con el historial.
+ * Realiza la petición real a la API de Java
  */
 async function searchTracking() {
     const guideNumber = trackingInput.value.trim().toUpperCase();
-    
-    // 1. Validar la entrada
+
     if (!guideNumber) {
         showError('Por favor, ingresa un número de guía.');
         return;
     }
 
-    // 2. Simular carga
     setLoading(true);
-    showError(''); // Limpiar errores previos
+    showError('');
 
-    // Simular una llamada a la API con un retraso de 1.5 segundos
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+        // Llamada al endpoint detalle/{numeroGuia}
+        // Nota: Si el error persiste, es debido a la política CORS en el servidor Java.
+        const response = await fetch(`${API_BASE_URL}/detalle/${guideNumber}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
 
-    const trackingHistory = MOCK_DATA[guideNumber];
+        if (!response.ok) {
+            if (response.status === 404 || response.status === 204) {
+                throw new Error('El número de guía no existe en nuestro sistema.');
+            }
+            throw new Error(`Error del servidor: ${response.status}`);
+        }
 
-    // 3. Procesar resultado
-    if (trackingHistory) {
-        // Generar y mostrar el historial
-        renderTrackingHistory(guideNumber, trackingHistory);
-        
-        // Transición a la segunda pantalla
-        searchScreen.classList.add('hidden');
-        trackingScreen.classList.remove('hidden');
-        trackingScreen.classList.add('logo-animate'); // Reutilizar la animación para la entrada
-        
-    } else {
-        // Mostrar error si la guía no se encuentra
-        showError(`No se encontró el número de guía: ${guideNumber}. Verifica e inténtalo de nuevo.`);
+        const data = await response.json();
+
+        if (data && data.numeroGuia) {
+            renderTrackingHistory(data);
+
+            searchScreen.classList.add('hidden');
+            trackingScreen.classList.remove('hidden');
+            trackingScreen.classList.add('logo-animate');
+        } else {
+            throw new Error('No se encontraron datos válidos para esta guía.');
+        }
+
+    } catch (error) {
+        // Si el error es por CORS, entrará aquí como TypeError: Failed to fetch
+        if (error.message === 'Failed to fetch') {
+            showError('Error de conexión (CORS). El servidor Java debe permitir peticiones desde este origen.');
+        } else {
+            showError(error.message);
+        }
+        console.error('Error detallado:', error);
+    } finally {
+        setLoading(false);
     }
-
-    // 4. Finalizar carga
-    setLoading(false);
 }
 
 /**
- * Muestra el historial de seguimiento en la segunda pantalla.
- * @param {string} number - El número de guía.
- * @param {Array<Object>} history - El array de eventos de seguimiento.
+ * Renderiza la información basada en el objeto que devuelve tu API
  */
-function renderTrackingHistory(number, history) {
-    // Ordenar para asegurar que el más reciente esté al final del historial (y abajo en la lista)
-    const sortedHistory = [...history];
-    
-    // Encuentra el estado actual (último evento completado o el más reciente si no hay completos)
-    let lastCompletedIndex = sortedHistory.findIndex(event => !event.complete);
-    // Si todos están completos, toma el último
-    if (lastCompletedIndex === -1) {
-        lastCompletedIndex = sortedHistory.length;
-    }
+function renderTrackingHistory(detalle) {
+    displayTrackingNumber.textContent = detalle.numeroGuia;
 
-    const currentEvent = sortedHistory[Math.max(0, lastCompletedIndex - 1)]; // El último evento *completado*
-    const lastUpdate = sortedHistory[Math.max(0, lastCompletedIndex - 1)];
+    // Mapeo de campos según tu JSON de ejemplo
+    currentStatus.textContent = detalle.estatus || 'Procesando';
 
-    // Actualizar resumen
-    displayTrackingNumber.textContent = number;
-    currentStatus.textContent = currentEvent ? currentEvent.description : 'Pendiente de Procesamiento';
-    lastUpdateTime.textContent = lastUpdate ? `${lastUpdate.date} a las ${lastUpdate.time} en ${lastUpdate.location}` : 'N/A';
-    statusIcon.textContent = getStatusIcon(currentStatus.textContent);
+    // Si no hay fecha detallada, usamos una genérica o el campo que tengas disponible
+    const fechaActualizacion = detalle.fechaEnvio || new Date().toLocaleDateString();
+    const ubicacion = detalle.destino || detalle.sucursalOrigen || 'Ubicación no disponible';
 
-    // Generar la lista de eventos
-    trackingList.innerHTML = ''; // Limpiar lista previa
+    lastUpdateTime.textContent = `${fechaActualizacion} - ${ubicacion}`;
+    statusIcon.textContent = getStatusIcon(detalle.estatus);
 
-    sortedHistory.forEach((event, index) => {
-        // Determinar si el evento ya está "completo"
-        const isComplete = index < lastCompletedIndex;
-        const isCurrent = index === lastCompletedIndex;
-        
-        const cardHtml = `
-            <div class="flex">
-                <div class="flex-shrink-0 w-24">
-                    <p class="text-sm text-gray-400">${event.date}</p>
-                    <p class="text-xs text-gray-400">${event.time}</p>
-                </div>
-                <div class="flex-grow w-full">
-                    <div class="history-card ${isComplete ? 'complete' : ''} bg-gray-50 p-4 rounded-lg shadow-sm transition duration-300 ${isCurrent ? 'bg-secondary-accent/20 border-secondary-accent font-semibold' : 'hover:bg-gray-100'}">
-                        <p class="text-base text-gray-800">${event.description}</p>
-                        <p class="text-sm text-gray-600 mt-1">${event.location}</p>
-                    </div>
+    // Limpiar lista e insertar estado actual
+    trackingList.innerHTML = '';
+
+    // Mostramos el origen como punto inicial
+    const origenHtml = createHistoryStep(
+        fechaActualizacion,
+        "Envío registrado",
+        `Origen: ${detalle.sucursalOrigen}`,
+        true
+    );
+    trackingList.insertAdjacentHTML('beforeend', origenHtml);
+
+    // Paso de estado actual (Basado en el estatus que recibimos)
+    const statusHtml = createHistoryStep(
+        fechaActualizacion,
+        detalle.estatus,
+        `Destino: ${detalle.destino}`,
+        false
+    );
+    trackingList.insertAdjacentHTML('beforeend', statusHtml);
+}
+
+function createHistoryStep(date, title, location, isComplete) {
+    return `
+        <div class="flex">
+            <div class="flex-shrink-0 w-24">
+                <p class="text-sm text-gray-400">${date}</p>
+            </div>
+            <div class="flex-grow w-full">
+                <div class="history-card ${isComplete ? 'complete' : ''} bg-gray-50 p-4 rounded-lg shadow-sm mb-4">
+                    <p class="text-base text-gray-800 font-bold">${title}</p>
+                    <p class="text-sm text-gray-600 mt-1">${location}</p>
                 </div>
             </div>
-        `;
-        trackingList.insertAdjacentHTML('beforeend', cardHtml);
-    });
+        </div>
+    `;
 }
 
-/**
- * Retorna un ícono basado en el estado actual.
- * @param {string} statusText - El texto del estado actual.
- * @returns {string} - El emoji del ícono.
- */
 function getStatusIcon(statusText) {
-    if (statusText.includes('Entrega Exitosa')) return '🎉';
-    if (statusText.includes('En Ruta de Entrega')) return '🛵';
-    if (statusText.includes('Llegada a Centro Operativo')) return '🏢';
-    if (statusText.includes('En Tránsito') || statusText.includes('En Vuelo')) return '✈️';
+    if (!statusText) return '📦';
+    const s = statusText.toLowerCase();
+    if (s.includes('recibido')) return '🏢';
+    if (s.includes('transito') || s.includes('ruta')) return '🚚';
+    if (s.includes('entregado')) return '✅';
     return '📦';
 }
 
-/**
- * Muestra u oculta el spinner de carga.
- * @param {boolean} isLoading - True para mostrar, false para ocultar.
- */
 function setLoading(isLoading) {
     if (isLoading) {
         buttonContent.classList.add('hidden');
@@ -150,42 +147,18 @@ function setLoading(isLoading) {
     }
 }
 
-/**
- * Muestra un mensaje de error.
- * @param {string} message - Mensaje de error a mostrar.
- */
 function showError(message) {
     errorMessage.textContent = message;
-    if (message) {
-        errorMessage.classList.remove('hidden');
-    } else {
-        errorMessage.classList.add('hidden');
-    }
+    message ? errorMessage.classList.remove('hidden') : errorMessage.classList.add('hidden');
 }
 
-/**
- * Vuelve a la pantalla de búsqueda.
- */
 function goToSearch() {
     trackingScreen.classList.add('hidden');
     searchScreen.classList.remove('hidden');
-    searchScreen.classList.add('logo-animate'); // Animación de vuelta
-    trackingInput.value = ''; // Limpiar input
+    trackingInput.value = '';
 }
 
-// Globalizar la función searchTracking para que sea accesible desde el HTML
 window.searchTracking = searchTracking;
 window.goToSearch = goToSearch;
 
-// Agregar evento para buscar al presionar Enter
-trackingInput.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        searchTracking();
-    }
-});
-
-// Inicializar la aplicación al cargar el DOM
-document.addEventListener('DOMContentLoaded', () => {
-    // Esto asegura que la pantalla de búsqueda esté visible al inicio con la animación
-    searchScreen.classList.add('logo-animate');
-});
+trackingInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchTracking(); });
