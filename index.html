@@ -1,89 +1,138 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Packet-World | Consulta de Guía</title>
-    
-    <!-- Incluir Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Enlace a nuestro archivo de estilos custom -->
-    <link rel="stylesheet" href="style.css">
-</head>
-<body class="font-sans antialiased">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Packet-World | Rastreo Profesional</title>
 
-    <!-- Contenedor Principal de la Aplicación -->
-    <div class="app-container p-4">
+        <!-- Tailwind CSS -->
+        <script src="https://cdn.tailwindcss.com"></script>
 
-        <!-- PANTALLA 1: Búsqueda de Guía -->
-        <div id="search-screen" class="w-full max-w-lg bg-white shadow-2xl rounded-xl p-8 transition-all duration-700">
-            
-            <!-- Logo Grande con Colores de la Marca -->
-            <div class="text-center mb-6 logo-animate">
-                <!-- ASEGÚRATE DE QUE LA IMAGEN 'logo.png' ESTÉ EN LA MISMA CARPETA QUE index.html -->
-                <img src="logo.png" alt="Packet-World Logo" class="mx-auto h-24 sm:h-32 object-contain">
-            </div>
+        <!-- Google Fonts -->
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+            rel="stylesheet">
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body class="bg-[#F3F7FA] font-['Inter'] antialiased text-gray-900">
 
-            <!-- Mensaje de Bienvenida con Animación -->
-            <h1 class="text-3xl font-bold text-center mb-2 text-gray-800 logo-animate" style="animation-delay: 0.2s;">
-                ¡Bienvenido a tu seguimiento!
-            </h1>
-            <p class="text-center text-gray-500 mb-8 logo-animate" style="animation-delay: 0.4s;">
-                Ingresa tu número de guía para ver el estado de tu envío.
-            </p>
+        <div
+            class="app-container min-h-screen py-8 px-4 flex flex-col items-center justify-center">
 
-            <!-- Formulario de Búsqueda -->
-            <div class="space-y-4 logo-animate" style="animation-delay: 0.6s;">
-                <input type="text" id="tracking-input" placeholder="Ej. 1A2B3C4D5E" class="w-full px-5 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-secondary-accent focus-ring-secondary-accent transition duration-300" maxlength="30">
-                <button onclick="searchTracking()" id="search-button" class="w-full py-3 rounded-lg text-white font-semibold transition duration-300 transform hover:scale-[1.01] shadow-lg bg-secondary-accent">
-                    <div id="button-content">Buscar Envío</div>
-                    <div id="loading-spinner" class="hidden h-5 w-5 border-4 border-t-white border-r-white border-b-white rounded-full animate-spin mx-auto"></div>
-                </button>
-            </div>
-            
-            <div id="error-message" class="mt-4 text-center text-red-500 hidden"></div>
-        </div>
+            <!-- PANTALLA 1: Búsqueda -->
+            <div id="search-screen"
+                class="w-full max-w-lg bg-white shadow-2xl rounded-2xl overflow-hidden transition-all duration-500">
+                <div class="p-8 sm:p-12 text-center">
+                    <div class="mb-8 logo-animate">
+                        <img src="logo.png" alt="Packet-World Logo"
+                            class="mx-auto h-28 object-contain drop-shadow-sm">
+                    </div>
 
-        <!-- PANTALLA 2: Historial de Envío -->
-        <div id="tracking-screen" class="hidden w-full max-w-2xl bg-white shadow-2xl rounded-xl p-8 transition-all duration-700">
-            <button onclick="goToSearch()" class="mb-6 flex items-center text-gray-600 hover:text-secondary-accent transition duration-200">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Volver a Búsqueda
-            </button>
+                    <h1
+                        class="text-3xl font-bold text-[#1E3B5C] mb-3 logo-animate"
+                        style="animation-delay: 0.2s;">
+                        Rastrea tu envío
+                    </h1>
+                    <p class="text-gray-500 mb-10 logo-animate"
+                        style="animation-delay: 0.4s;">
+                        Ingresa los dígitos de tu guía para conocer el estatus
+                        en tiempo real.
+                    </p>
 
-            <h2 class="text-3xl font-bold text-gray-800 mb-2">
-                Seguimiento: <span id="display-tracking-number" class="text-secondary-accent"></span>
-            </h2>
-            <p class="text-gray-500 mb-6">Última actualización: <span id="last-update-time"></span></p>
+                    <div class="space-y-4 logo-animate"
+                        style="animation-delay: 0.6s;">
+                        <input type="text" id="tracking-input"
+                            placeholder="Ej: PW-8823-X"
+                            class="w-full px-6 py-4 bg-gray-50 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-[#F77F00] focus:bg-white transition-all text-lg font-semibold tracking-wider uppercase text-center">
 
-            <!-- Resumen del Estado -->
-            <div class="bg-primary-dark text-white p-4 rounded-lg shadow-md mb-8 flex flex-col sm:flex-row justify-between items-center">
-                <div>
-                    <p class="text-sm opacity-80">ESTADO ACTUAL</p>
-                    <p id="current-status" class="text-xl font-bold"></p>
+                        <button onclick="searchTracking()" id="search-button"
+                            class="w-full py-4 rounded-xl text-white font-bold text-lg bg-[#F77F00] hover:bg-[#E67600] active:scale-95 transition-all shadow-lg shadow-orange-200">
+                            <span id="button-content">Consultar Estatus</span>
+                            <div id="loading-spinner"
+                                class="hidden h-6 w-6 border-4 border-t-white border-white/30 rounded-full animate-spin mx-auto"></div>
+                        </button>
+                    </div>
+
+                    <div id="error-message"
+                        class="mt-6 p-3 bg-red-50 text-red-600 text-sm rounded-lg text-center font-medium hidden"></div>
                 </div>
-                <div id="status-icon" class="text-4xl mt-2 sm:mt-0">📦</div>
             </div>
 
-            <!-- Línea de Tiempo del Historial -->
-            <div class="space-y-6" id="tracking-list">
-                <!-- Los eventos de historial se insertarán aquí por JavaScript -->
-            </div>
-
-            <!-- Botón de Acción (Ej. Ayuda) -->
-            <div class="mt-10 text-center">
-                <button class="py-3 px-6 rounded-lg text-primary-dark font-semibold border-2 border-primary-dark hover:bg-primary-dark hover:text-white transition duration-300">
-                    Necesito Ayuda con mi Envío
+            <!-- PANTALLA 2: Detalle y Tracking -->
+            <div id="tracking-screen" class="hidden w-full max-w-3xl py-4">
+                <button onclick="goToSearch()"
+                    class="mb-6 group flex items-center text-gray-500 hover:text-[#F77F00] font-semibold transition-colors">
+                    <div
+                        class="bg-white p-2 rounded-lg shadow-sm mr-3 group-hover:shadow-md transition-all border border-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
+                            fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </div>
+                    Nueva búsqueda
                 </button>
+
+                <div
+                    class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                    <!-- Header de la Guía -->
+                    <div class="p-8 border-b border-gray-50">
+                        <div
+                            class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <span
+                                    class="text-[10px] font-black text-[#F77F00] uppercase tracking-[0.2em]">Guía
+                                    de rastreo</span>
+                                <h2 id="display-tracking-number"
+                                    class="text-4xl font-black text-[#1E3B5C] leading-none mt-1"></h2>
+                            </div>
+                            <div
+                                class="flex items-center gap-3 bg-[#F3F7FA] px-4 py-2 rounded-full border border-gray-100">
+                                <span id="status-icon" class="text-2xl"></span>
+                                <span id="current-status"
+                                    class="font-bold text-[#1E3B5C] uppercase text-xs tracking-widest"></span>
+                            </div>
+                        </div>
+                        <p
+                            class="text-gray-400 text-xs mt-6 flex items-center italic">
+                            <svg class="w-3.5 h-3.5 mr-1.5" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24"><path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round" stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Referencia: <span id="last-update-time"
+                                class="ml-1 font-medium text-gray-600"></span>
+                        </p>
+                    </div>
+
+                    <!-- Contenedor Dinámico -->
+                    <div class="p-8 bg-white" id="tracking-list">
+                        <!-- JS inyectará Contenido de Envío e Historial -->
+                    </div>
+
+                    <!-- Footer Acciones -->
+                    <div
+                        class="bg-gray-50 p-6 text-center border-t border-gray-100">
+                        <p
+                            class="text-sm text-gray-500 mb-4 font-medium italic">¿Tienes
+                            dudas sobre el paradero de tu mercancía?</p>
+                        <div class="flex flex-wrap justify-center gap-3">
+                            <button
+                                class="bg-[#1E3B5C] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#2a527d] transition-all shadow-md text-sm">
+                                Contactar Soporte
+                            </button>
+                            <button
+                                class="bg-white border-2 border-[#1E3B5C] text-[#1E3B5C] px-6 py-2 rounded-xl font-bold hover:bg-gray-100 transition-all text-sm">
+                                Descargar Reporte
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
+
         </div>
 
-    </div>
-
-    <!-- Enlace a nuestro archivo de scripts -->
-    <script src="script.js"></script>
-</body>
+        <script src="script.js"></script>
+    </body>
 </html>
