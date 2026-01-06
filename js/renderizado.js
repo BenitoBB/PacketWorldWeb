@@ -23,7 +23,6 @@ const Renderizador = {
                             <p class="text-[10px] text-gray-400 font-bold mt-3 uppercase">Descripción</p>
                             <h4 class="text-[#1E3B5C] font-extrabold text-lg leading-tight">${p.descripcion || 'Sin descripción'}</h4>
                         </div>
-                        <span class="text-orange-500 font-bold text-xs">ID: ${p.idPaquete || (i + 1)}</span>
                     </div>
 
                     <hr class="border-gray-50 mb-4">
